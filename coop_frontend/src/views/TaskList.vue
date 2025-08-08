@@ -11,7 +11,7 @@
         class="task-card"
         :class="`task-card--${status}`"
       >
-        <h5>{{ getStatusName(status) }}</h5>
+        <h3>{{ getStatusName(status) }}</h3>
         <draggable
           :list="tasksByStatus[status]"
           group="tasks"
@@ -170,6 +170,8 @@ const tasksByStatus = computed(() => {
   return grouped;
 });
 const onDragEnd = async (event: any) => {
+  if (!event.to) return;
+
   const task = event.item._underlying_vm_;
   const newStatus = event.to
     .closest(".task-card")
@@ -177,12 +179,21 @@ const onDragEnd = async (event: any) => {
 
   if (task.status !== newStatus) {
     try {
-      await taskStore.updateTask(task.id, {
-        ...task,
-        status: newStatus,
-      });
+      // Создаем копию задачи с новым статусом
+      const updatedTask = { ...task, status: newStatus };
+
+      // Оптимистичное обновление - меняем статус прямо в элементе
+      task.status = newStatus;
+
+      // Обновляем на сервере
+      await taskStore.updateTask(task.id, updatedTask);
+
+      // Принудительно обновляем список задач
+      taskStore.fetchTasks(); // или альтернативный способ обновления
     } catch (error) {
       console.error("Ошибка при обновлении статуса:", error);
+      // Возвращаем исходный статус при ошибке
+      task.status = event.item._underlying_vm_.status;
     }
   }
 };
