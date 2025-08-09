@@ -2,14 +2,6 @@ import { defineStore } from "pinia";
 import taskApi from "@/api/taskApi";
 import { ITask } from "@/types/task";
 
-// interface Task {
-//   // возможно этот интерфейс надо убрать
-//   id: string;
-//   title: string;
-//   description?: string;
-//   status: string;
-// }
-
 export const useTaskStore = defineStore("task", {
   state: () => ({
     tasks: [] as ITask[],
@@ -18,6 +10,9 @@ export const useTaskStore = defineStore("task", {
     async fetchTasks() {
       this.tasks = await taskApi.getTasks();
     },
+    // setTasks(tasks: ITask[]) {
+    //   this.tasks = tasks;
+    // },
     async createTask(taskData: {
       title: string;
       description: string;

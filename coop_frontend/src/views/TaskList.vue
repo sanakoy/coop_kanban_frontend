@@ -42,28 +42,6 @@
             </div>
           </template>
         </draggable>
-        <!-- <div v-for="task in tasks" :key="task.id">
-          <div v-if="task.status === status" class="task">
-            <div class="task-header">
-              <h3>{{ task.title }}</h3>
-              <div class="task-actions" style="position: relative">
-                <button class="dots-button" @click.stop="toggleMenu(task.id)">
-                  ⋮
-                </button>
-                <div
-                  v-if="activeMenu === task.id"
-                  class="dropdown-menu"
-                  v-click-outside="closeMenu"
-                >
-                  <button @click="editTask(task)">Редактировать</button>
-                  <button @click="deleteTask(task.id)">Удалить</button>
-                </div>
-              </div>
-            </div>
-            <p>{{ task.description }}</p>
-            <span>Статус: {{ task.status }}</span>
-          </div>
-        </div> -->
       </div>
     </div>
     <TaskEditModal
@@ -90,13 +68,14 @@
 <script setup lang="ts">
 import { useTaskStore } from "@/stores/taskStore";
 import { ITask } from "@/types/task";
-import { onMounted, computed, ref } from "vue";
+import { onMounted, computed, ref, onBeforeUnmount } from "vue";
 import TaskEditModal from "../components/TaskModal.vue";
 import draggable from "vuedraggable";
+import useWebSocket from "@/websockets/webocket.service";
 const taskStore = useTaskStore();
 const tasks = computed(() => taskStore.tasks);
 const statuses = ["todo", "in_progress", "done"];
-
+const { ws, wsConnect, wsClose } = useWebSocket();
 const activeMenu = ref<string | null>(null);
 const isEditModalOpen = ref(false);
 const isCreateModalOpen = ref(false);
@@ -145,7 +124,6 @@ const editTask = (task: any) => {
   closeMenu();
 };
 const createTask = (task: any) => {
-  // editingTask.value = { ...task };
   isCreateModalOpen.value = true;
 };
 
@@ -156,6 +134,16 @@ const deleteTask = async (id: string) => {
 
 onMounted(async () => {
   await taskStore.fetchTasks();
+  wsConnect();
+  ws.value.onmessage = (event) => {
+    event.data === "tasks_updated" && taskStore.fetchTasks();
+  };
+});
+
+onBeforeUnmount(() => {
+  if (ws.value) {
+    wsClose();
+  }
 });
 
 const tasksByStatus = computed(() => {
@@ -290,8 +278,10 @@ const getStatusName = (status: string) => {
 
 .draggable-container {
   min-height: 100px;
+  height: 100%;
   padding: 10px;
-  transition: all 0.3s;
+  margin: 5px 0;
+  position: relative;
 }
 
 .task {
