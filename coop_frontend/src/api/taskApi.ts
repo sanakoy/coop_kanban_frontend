@@ -1,7 +1,10 @@
 import axios from "axios";
 
+const env = import.meta.env as any;
+const baseURL = env.VITE_API_BASE_URL as string;
+
 const apiClient = axios.create({
-  baseURL: "http://127.0.0.1:8000/kanban/api/v1",
+  baseURL: baseURL,
   headers: {
     "Content-Type": "application/json",
   },

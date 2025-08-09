@@ -67,7 +67,7 @@
 <script setup lang="ts">
 import { useTaskStore } from "@/stores/taskStore";
 import { ITask } from "@/types/task";
-import { onMounted, computed, ref, onBeforeUnmount } from "vue";
+import { onMounted, computed, ref } from "vue";
 import TaskEditModal from "../components/TaskModal.vue";
 import draggable from "vuedraggable";
 import useWebSocket from "@/websockets/webocket.service";
@@ -78,7 +78,7 @@ const statuses = {
   in_progress: "В процессе",
   done: "Выполнено",
 };
-const { ws, wsConnect, wsClose } = useWebSocket();
+const { ws, wsConnect } = useWebSocket();
 const activeMenu = ref<string | null>(null);
 const isEditModalOpen = ref(false);
 const isCreateModalOpen = ref(false);
@@ -138,15 +138,10 @@ const deleteTask = async (id: string) => {
 onMounted(async () => {
   await taskStore.fetchTasks();
   wsConnect();
-  ws.value.onmessage = (event) => {
-    event.data === "tasks_updated" && taskStore.fetchTasks();
-  };
-});
-
-onBeforeUnmount(() => {
-  if (ws.value) {
-    wsClose();
-  }
+  if (ws.value)
+    ws.value.onmessage = (event: MessageEvent) => {
+      event.data === "tasks_updated" && taskStore.fetchTasks();
+    };
 });
 
 const tasksByStatus = computed(() => {

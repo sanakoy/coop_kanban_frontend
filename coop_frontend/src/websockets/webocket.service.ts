@@ -1,10 +1,17 @@
-import { ref } from "vue";
+import { Ref, ref } from "vue";
+const env = import.meta.env as any;
+const wsUrl = env.VITE_API_WS_URL as string;
 
-export default function useWebSocket() {
-  const ws = ref(null);
+interface WebSocketComposable {
+  ws: Ref<WebSocket | null>;
+  wsConnect: () => void;
+}
+
+export default function useWebSocket(): WebSocketComposable {
+  const ws: Ref<WebSocket | null> = ref(null);
 
   const wsConnect = () => {
-    ws.value = new WebSocket("ws://localhost:8000/ws");
+    ws.value = new WebSocket(wsUrl);
 
     ws.value.onopen = () => {
       console.log("WebSocket connected");
@@ -13,16 +20,15 @@ export default function useWebSocket() {
     ws.value.onerror = (error) => {
       console.error("WebSocket error:", error);
     };
-  };
 
-  const wsClose = () => {
-    ws.value.close();
-    console.log("WebSocket closed");
+    ws.value.onclose = () => {
+      console.log("WebSocket closed");
+      ws.value = null;
+    };
   };
 
   return {
     ws,
     wsConnect,
-    wsClose,
   };
 }
