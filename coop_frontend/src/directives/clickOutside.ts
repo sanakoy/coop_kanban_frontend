@@ -1,4 +1,3 @@
-// directives/clickOutside.js
 export default {
   beforeMount(el, binding) {
     el.clickOutsideEvent = function (event) {

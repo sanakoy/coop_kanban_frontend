@@ -16,8 +16,12 @@
       <div class="form-group">
         <label>Статус</label>
         <select v-model="localTask.status">
-          <option v-for="status in statuses" :value="status" :key="status">
-            {{ status }}
+          <option
+            v-for="(statusRu, statusEng) in statuses"
+            :value="statusEng"
+            :key="statusEng"
+          >
+            {{ statusRu }}
           </option>
         </select>
       </div>
@@ -42,7 +46,7 @@ const props = defineProps({
     required: true,
   },
   statuses: {
-    type: Array as () => string[],
+    type: Object as () => Record<string, string>,
     default: () => ["todo", "in_progress", "done"],
   },
 });

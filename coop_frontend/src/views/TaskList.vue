@@ -6,14 +6,14 @@
     </div>
     <div class="kanban-container">
       <div
-        v-for="status in statuses"
-        :key="status"
+        v-for="(statusRu, statusEng) in statuses"
+        :key="statusEng"
         class="task-card"
-        :class="`task-card--${status}`"
+        :class="`task-card--${statusEng}`"
       >
-        <h3>{{ getStatusName(status) }}</h3>
+        <h3>{{ statusRu }}</h3>
         <draggable
-          :list="tasksByStatus[status]"
+          :list="tasksByStatus[statusEng]"
           group="tasks"
           item-key="id"
           @end="onDragEnd"
@@ -38,7 +38,6 @@
                 </div>
               </div>
               <p>{{ task.description }}</p>
-              <span class="task-status">{{ getStatusName(task.status) }}</span>
             </div>
           </template>
         </draggable>
@@ -74,7 +73,11 @@ import draggable from "vuedraggable";
 import useWebSocket from "@/websockets/webocket.service";
 const taskStore = useTaskStore();
 const tasks = computed(() => taskStore.tasks);
-const statuses = ["todo", "in_progress", "done"];
+const statuses = {
+  todo: "Нужно выполнить",
+  in_progress: "В процессе",
+  done: "Выполнено",
+};
 const { ws, wsConnect, wsClose } = useWebSocket();
 const activeMenu = ref<string | null>(null);
 const isEditModalOpen = ref(false);
@@ -123,7 +126,7 @@ const editTask = (task: any) => {
   isEditModalOpen.value = true;
   closeMenu();
 };
-const createTask = (task: any) => {
+const createTask = () => {
   isCreateModalOpen.value = true;
 };
 
@@ -167,32 +170,14 @@ const onDragEnd = async (event: any) => {
 
   if (task.status !== newStatus) {
     try {
-      // Создаем копию задачи с новым статусом
       const updatedTask = { ...task, status: newStatus };
-
-      // Оптимистичное обновление - меняем статус прямо в элементе
       task.status = newStatus;
-
-      // Обновляем на сервере
       await taskStore.updateTask(task.id, updatedTask);
-
-      // Принудительно обновляем список задач
-      taskStore.fetchTasks(); // или альтернативный способ обновления
     } catch (error) {
       console.error("Ошибка при обновлении статуса:", error);
-      // Возвращаем исходный статус при ошибке
       task.status = event.item._underlying_vm_.status;
     }
   }
-};
-
-const getStatusName = (status: string) => {
-  const names: Record<string, string> = {
-    todo: "Нужно выполнить",
-    in_progress: "В процессе",
-    done: "Выполнено",
-  };
-  return names[status] || status;
 };
 </script>
 
