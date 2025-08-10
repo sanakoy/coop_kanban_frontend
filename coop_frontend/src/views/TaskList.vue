@@ -150,7 +150,7 @@ const tasksByStatus = computed(() => {
     in_progress: [],
     done: [],
   };
-  tasks.value.forEach((task) => {
+  tasks?.value.forEach((task) => {
     grouped[task.status].push(task);
   });
   return grouped;
